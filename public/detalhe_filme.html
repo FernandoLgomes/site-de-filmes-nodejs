@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Filme</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Meu Catálogo de Filmes</h1>
+    </div>
+    <div class="navbar">
+        <a href="/">Início</a>
+    </div>
+
+    <div class="container detail-container">
+        <div id="movieDetails" class="movie-details">
+            <p>A carregar detalhes do filme...</p>
+        </div>
+    </div>
+
+    <!-- Seção do leitor de vídeo -->
+    <div id="videoPlayerSection" style="display: none; text-align: center; margin-top: 20px;">
+        <h2>A ver: <span id="playingMovieTitle"></span></h2>
+        <video id="moviePlayer" controls width="80%" height="auto" autoplay>
+            O seu navegador não suporta a tag de vídeo.
+        </video>
+        <button onclick="hideVideoPlayer()" class="play-button" style="margin-top: 10px;">Voltar aos Detalhes</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const filmeId = params.get('id');
+            if (filmeId) {
+                fetchMovieDetails(filmeId);
+            } else {
+                document.getElementById('movieDetails').innerHTML = '<p>ID do filme não encontrado na URL.</p>';
+            }
+        });
+
+        async function fetchMovieDetails(id) {
+            try {
+                const response = await fetch(`${window.location.origin}/api/filmes/${id}`);
+                const filme = await response.json();
+                const movieDetailsDiv = document.getElementById('movieDetails');
+
+                if (filme) {
+                    movieDetailsDiv.innerHTML = `
+                        <div class="poster-container">
+                            <img src="${filme.poster_url}" alt="${filme.titulo}">
+                        </div>
+                        <div class="info-container">
+                            <h2>${filme.titulo}</h2>
+                            <p>${filme.sinopse}</p>
+                            <div class="details">
+                                <span><strong>Géneros:</strong> ${filme.generos && filme.generos.length > 0 ? filme.generos.join(', ') : 'N/A'}</span>
+                                <span><strong>Ano:</strong> ${filme.ano || 'N/A'}</span>
+                                <span><strong>Nota:</strong> ${filme.nota || 'N/A'}</span>
+                            </div>
+                            <button onclick="playMovie('${filme.url_stream_original}', '${filme.titulo}')" class="play-button">Ver Filme</button>
+                        </div>
+                    `;
+
+                    // Mostrar seção de trailer se houver URL
+                    const trailerSectionHtml = `
+                        <div class="trailer-section">
+                            <h3>Trailer</h3>
+                            <div class="trailer-embed">
+                                <iframe src="${filme.trailer_url}" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                        </div>
+                    `;
+                    // Inserir a seção do trailer após o contêiner de detalhes
+                    movieDetailsDiv.insertAdjacentHTML('afterend', trailerSectionHtml);
+
+                    // Se não houver trailer, pode-se esconder a seção do trailer
+                    if (!filme.trailer_url) {
+                        const trailerSection = document.querySelector('.trailer-section');
+                        if (trailerSection) trailerSection.style.display = 'none';
+                    }
+
+                } else {
+                    movieDetailsDiv.innerHTML = '<p>Filme não encontrado.</p>';
+                }
+            } catch (error) {
+                console.error("Erro ao carregar detalhes do filme:", error);
+                document.getElementById('movieDetails').innerHTML = '<p>Erro ao carregar detalhes do filme. Tente novamente mais tarde.</p>';
+            }
+        }
+
+        function playMovie(streamUrl, movieTitle) {
+            console.log(`A tentar reproduzir: ${movieTitle} de ${streamUrl}`);
+            const moviePlayer = document.getElementById('moviePlayer');
+            const videoPlayerSection = document.getElementById('videoPlayerSection');
+            const movieDetailsSection = document.getElementById('movieDetails').closest('.container'); // Pega o contêiner pai para esconder
+
+            // Esconder a seção de detalhes do filme
+            if (movieDetailsSection) {
+                movieDetailsSection.style.display = 'none';
+                const trailerSection = document.querySelector('.trailer-section');
+                if (trailerSection) trailerSection.style.display = 'none';
+            }
+
+            // Atualizar o título do filme a ser reproduzido
+            document.getElementById('playingMovieTitle').textContent = movieTitle;
+
+            // Definir o URL do stream e carregar o vídeo
+            moviePlayer.src = streamUrl;
+            moviePlayer.load(); // Carrega o novo URL
+            moviePlayer.play().catch(error => {
+                console.error("Erro ao tentar reproduzir o vídeo automaticamente:", error);
+                // Informar o utilizador que a reprodução automática pode estar bloqueada
+                alert("A reprodução automática pode estar bloqueada pelo navegador. Por favor, prima 'Play' no leitor de vídeo.");
+            });
+
+            // Mostrar o leitor de vídeo
+            videoPlayerSection.style.display = 'block';
+        }
+
+        function hideVideoPlayer() {
+            const moviePlayer = document.getElementById('moviePlayer');
+            const videoPlayerSection = document.getElementById('videoPlayerSection');
+            const movieDetailsSection = document.getElementById('movieDetails').closest('.container');
+
+            // Pausar e redefinir o vídeo
+            moviePlayer.pause();
+            moviePlayer.src = ""; // Limpa a fonte do vídeo
+
+            // Esconder o leitor de vídeo
+            videoPlayerSection.style.display = 'none';
+
+            // Mostrar a seção de detalhes do filme novamente
+            if (movieDetailsSection) {
+                movieDetailsSection.style.display = 'block';
+                const trailerSection = document.querySelector('.trailer-section');
+                if (trailerSection) trailerSection.style.display = 'block'; // Mostra o trailer de volta
+            }
+        }
+    </script>
+</body>
+</html>

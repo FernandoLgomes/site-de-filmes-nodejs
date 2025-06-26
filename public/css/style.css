@@ -1,0 +1,364 @@
+/* public/css/style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #1a1a1a;
+    color: #f0f0f0; /* Cor do texto padrão para todo o corpo */
+}
+
+.header {
+    background-color: #333;
+    padding: 20px;
+    text-align: center;
+}
+
+.header h1 {
+    margin: 0;
+    color: #e50914; /* Cor vermelha para o título do cabeçalho */
+}
+
+.navbar {
+    background-color: #222;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.navbar a {
+    color: #f0f0f0;
+    text-decoration: none;
+    padding: 0 15px;
+}
+
+.navbar a:hover {
+    color: #e50914; /* Efeito hover vermelho */
+}
+
+.container {
+    padding: 20px;
+    max-width: 1200px; /* Mantém a largura máxima do conteúdo central */
+    margin: auto;
+    display: flex; /* Transforma o container em um flex container */
+    flex-direction: column; /* Organiza os itens em coluna por padrão */
+    align-items: center; /* Centraliza os itens horizontalmente */
+}
+
+.section-title {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    color: #f0f0f0;
+}
+
+/* Novo wrapper para o layout principal (conteúdo + banners laterais) */
+.main-layout-wrapper {
+    display: flex; /* Permite que os banners laterais e o conteúdo central se alinhem */
+    justify-content: center; /* Centraliza o conteúdo */
+    align-items: flex-start; /* Alinha os itens ao topo */
+    width: 100%; /* Ocupa a largura total do container */
+    gap: 20px; /* Espaçamento entre os elementos (banners e conteúdo central) */
+}
+
+.central-content-area {
+    flex-grow: 1; /* Permite que esta área ocupe o espaço restante */
+    max-width: 800px; /* Exemplo: define uma largura máxima para o conteúdo central */
+    min-width: 300px; /* Largura mínima para evitar que o conteúdo fique muito pequeno */
+}
+
+/* Estilo para banners de anúncio (geral) */
+.banner-ad {
+    width: 100%;
+    margin: 20px auto; /* Centraliza e adiciona margem */
+    background-color: #282828;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    overflow: hidden; /* Garante que o conteúdo do banner não vaze */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex; /* Para centralizar o conteúdo do banner */
+    justify-content: center;
+    align-items: center;
+}
+
+.banner-ad img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Estilos específicos para banners laterais */
+.side-banner {
+    flex-shrink: 0; /* Impede que o banner encolha */
+    width: 160px; /* Largura padrão para banners laterais (ex: 160x600) */
+    min-height: 600px; /* Altura mínima para banners laterais */
+    background-color: #282828;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box; /* Inclui padding na largura total */
+}
+
+/* Estilos específicos para o banner inferior */
+.banner-ad.bottom-banner {
+    margin-top: 30px;
+    min-height: 90px; /* Altura para banners horizontais comuns (ex: 970x90) */
+}
+
+/* Regras para os grids de filmes */
+.movie-grid { 
+    display: grid;
+    /* Adaptação para colunas: 180px mínimo, 1fr para preencher o espaço */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    width: 100%; /* Garante que o grid ocupe toda a largura disponível */
+    min-height: 200px; /* Garante uma altura mínima para o grid, caso esteja vazio */
+    border: 1px dashed rgba(255, 255, 255, 0.3); /* Borda de depuração */
+    padding: 10px;
+}
+
+.movie-card {
+    background-color: #333;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borda de depuração */
+    color: #f0f0f0; /* Garante que o texto dentro do card seja visível */
+}
+
+.movie-card img {
+    width: 100%;
+    height: 270px;
+    object-fit: cover;
+    display: block;
+    background-color: #555; /* Garante que imagens quebradas ou placeholders sejam visíveis */
+}
+
+.movie-card h3 {
+    font-size: 1em;
+    margin: 10px 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #f0f0f0; /* Garante que o texto do título é visível */
+}
+
+.movie-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block; /* Faz o link ocupar todo o card */
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    transition: transform 0.2s ease;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.search-bar {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.search-bar input {
+    padding: 10px;
+    width: 60%;
+    max-width: 400px;
+    border: none;
+    border-radius: 5px;
+    background-color: #444;
+    color: #f0f0f0;
+    font-size: 1em;
+}
+
+.search-bar button {
+    padding: 10px 15px;
+    background-color: #e50914;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 1em;
+}
+
+.search-results {
+    margin-top: 20px;
+    background-color: #282828;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.search-results h2 {
+    color: #f0f0f0;
+    margin-top: 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+}
+
+/* Estilos específicos para detalhes do filme */
+.detail-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: flex-start; /* Alinha itens ao topo */
+}
+
+.poster-container {
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px; /* Limita a largura do poster */
+    text-align: center;
+}
+
+.poster-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.info-container {
+    flex: 2;
+    min-width: 300px;
+}
+
+.info-container h2 {
+    color: #e50914;
+    margin-top: 0;
+    font-size: 2em;
+}
+
+.info-container p {
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.details span {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+.details strong {
+    color: #e50914;
+}
+
+.play-button {
+    display: inline-block;
+    background-color: #e50914;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1.1em;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.play-button:hover {
+    background-color: #c40810;
+}
+
+.trailer-section {
+    margin-top: 30px;
+    text-align: center;
+    width: 100%; /* Garante que a seção ocupe a largura total */
+}
+
+.trailer-section h3 {
+    color: #f0f0f0;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.trailer-embed {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio para vídeos */
+    height: 0;
+    overflow: hidden;
+    background-color: black;
+    border-radius: 8px;
+}
+
+.trailer-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Estilos para cards de categoria (Mantidos, mas não usados no HTML agora) */
+.category-card {
+    background-color: #e50914;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.category-card a {
+    text-decoration: none;
+    color: white;
+    display: block;
+    font-size: 1.1em;
+}
+
+.category-card:hover {
+    background-color: #c40810;
+    transition: background-color 0.2s ease;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Responsividade básica */
+@media (max-width: 1200px) { /* Ajuste o breakpoint se 1200px for muito grande para mobile */
+    .main-layout-wrapper {
+        flex-direction: column; /* Em telas menores, os banners laterais ficam abaixo do conteúdo */
+        align-items: center; /* Centraliza os itens */
+    }
+    .side-banner {
+        width: 100%; /* Banners laterais ocupam a largura total em telas pequenas */
+        min-height: unset; /* Remove a altura mínima fixa */
+        height: 100px; /* Altura padrão para banners responsivos */
+        margin-bottom: 20px; /* Adiciona espaçamento entre banners */
+    }
+    .side-banner img {
+        max-height: 80px; /* Limita a altura da imagem dentro do banner responsivo */
+        width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    .detail-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .poster-container, .info-container {
+        min-width: unset;
+        max-width: 90%;
+    }
+    .search-bar input {
+        width: 80%;
+    }
+    .banner-ad {
+        min-height: 60px; /* Ajuste para banners menores em dispositivos móveis */
+    }
+    .banner-ad.bottom-banner {
+        min-height: 60px; /* Ajuste para banners inferiores em dispositivos móveis */
+    }
+}
