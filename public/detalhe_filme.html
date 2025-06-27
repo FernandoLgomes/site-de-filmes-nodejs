@@ -30,6 +30,10 @@
     </div>
 
     <script>
+        // *** IMPORTANTE: SUBSTITUA ESTE URL COM O URL DO SEU SERVIÇO PROXY NO RENDER.COM ***
+        const PROXY_SERVICE_URL = 'https://meu-proxy-filmes.onrender.com'; // Exemplo: https://seunome-do-proxy.onrender.com
+        // ***********************************************************************************
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const filmeId = params.get('id');
@@ -47,15 +51,14 @@
                 const movieDetailsDiv = document.getElementById('movieDetails');
 
                 if (filme) {
-                    // Verifica se o URL do stream existe e se é HTTPS. Se não for HTTPS, avisa.
                     let playButtonHtml = '';
                     if (filme.url_stream_original) {
-                        if (filme.url_stream_original.startsWith('http://') && window.location.protocol === 'https:') {
-                            console.warn(`[AVISO] URL do stream (${filme.url_stream_original}) é HTTP, mas o site é HTTPS. Pode ser bloqueado por 'Mixed Content'.`);
-                            playButtonHtml = `<button onclick="alert('Este stream pode ser bloqueado devido a problemas de segurança (Conteúdo Misto - HTTP em HTTPS). Tente abrir em uma nova aba ou verifique o log do console.'); window.open('${filme.url_stream_original}', '_blank');" class="play-button">Ver Filme (Pode Falhar)</button>`;
-                        } else {
-                            playButtonHtml = `<button onclick="playMovie('${filme.url_stream_original}', '${filme.titulo}')" class="play-button">Ver Filme</button>`;
-                        }
+                        // Constrói o URL do stream através do proxy
+                        const proxiedStreamUrl = `${PROXY_SERVICE_URL}/stream-proxy?url=${encodeURIComponent(filme.url_stream_original)}`;
+                        console.log(`[PLAY] URL do Stream original: ${filme.url_stream_original}`);
+                        console.log(`[PLAY] URL do Stream via Proxy: ${proxiedStreamUrl}`);
+                        
+                        playButtonHtml = `<button onclick="playMovie('${proxiedStreamUrl}', '${filme.titulo}')" class="play-button">Ver Filme</button>`;
                     } else {
                         playButtonHtml = `<button class="play-button" disabled style="background-color: #555;">Stream Não Disponível</button>`;
                     }
@@ -106,7 +109,7 @@
 
         function playMovie(streamUrl, movieTitle) {
             console.log(`[PLAY] Tentando reproduzir: ${movieTitle}`);
-            console.log(`[PLAY] URL do Stream: ${streamUrl}`);
+            console.log(`[PLAY] URL do Stream (via Proxy): ${streamUrl}`);
             const moviePlayer = document.getElementById('moviePlayer');
             const videoPlayerSection = document.getElementById('videoPlayerSection');
             const movieDetailsSection = document.getElementById('movieDetails').closest('.container');
