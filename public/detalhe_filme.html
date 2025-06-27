@@ -47,6 +47,19 @@
                 const movieDetailsDiv = document.getElementById('movieDetails');
 
                 if (filme) {
+                    // Verifica se o URL do stream existe e se é HTTPS. Se não for HTTPS, avisa.
+                    let playButtonHtml = '';
+                    if (filme.url_stream_original) {
+                        if (filme.url_stream_original.startsWith('http://') && window.location.protocol === 'https:') {
+                            console.warn(`[AVISO] URL do stream (${filme.url_stream_original}) é HTTP, mas o site é HTTPS. Pode ser bloqueado por 'Mixed Content'.`);
+                            playButtonHtml = `<button onclick="alert('Este stream pode ser bloqueado devido a problemas de segurança (Conteúdo Misto - HTTP em HTTPS). Tente abrir em uma nova aba ou verifique o log do console.'); window.open('${filme.url_stream_original}', '_blank');" class="play-button">Ver Filme (Pode Falhar)</button>`;
+                        } else {
+                            playButtonHtml = `<button onclick="playMovie('${filme.url_stream_original}', '${filme.titulo}')" class="play-button">Ver Filme</button>`;
+                        }
+                    } else {
+                        playButtonHtml = `<button class="play-button" disabled style="background-color: #555;">Stream Não Disponível</button>`;
+                    }
+
                     movieDetailsDiv.innerHTML = `
                         <div class="poster-container">
                             <img src="${filme.poster_url}" alt="${filme.titulo}">
@@ -59,11 +72,10 @@
                                 <span><strong>Ano:</strong> ${filme.ano || 'N/A'}</span>
                                 <span><strong>Nota:</strong> ${filme.nota || 'N/A'}</span>
                             </div>
-                            <button onclick="playMovie('${filme.url_stream_original}', '${filme.titulo}')" class="play-button">Ver Filme</button>
+                            ${playButtonHtml}
                         </div>
                     `;
 
-                    // Mostrar seção de trailer se houver URL
                     const trailerSectionHtml = `
                         <div class="trailer-section">
                             <h3>Trailer</h3>
@@ -76,10 +88,8 @@
                             </div>
                         </div>
                     `;
-                    // Inserir a seção do trailer após o contêiner de detalhes
                     movieDetailsDiv.insertAdjacentHTML('afterend', trailerSectionHtml);
 
-                    // Se não houver trailer, pode-se esconder a seção do trailer
                     if (!filme.trailer_url) {
                         const trailerSection = document.querySelector('.trailer-section');
                         if (trailerSection) trailerSection.style.display = 'none';
@@ -95,10 +105,29 @@
         }
 
         function playMovie(streamUrl, movieTitle) {
-            console.log(`A tentar reproduzir: ${movieTitle} de ${streamUrl}`);
+            console.log(`[PLAY] Tentando reproduzir: ${movieTitle}`);
+            console.log(`[PLAY] URL do Stream: ${streamUrl}`);
             const moviePlayer = document.getElementById('moviePlayer');
             const videoPlayerSection = document.getElementById('videoPlayerSection');
-            const movieDetailsSection = document.getElementById('movieDetails').closest('.container'); // Pega o contêiner pai para esconder
+            const movieDetailsSection = document.getElementById('movieDetails').closest('.container');
+
+            if (!streamUrl) {
+                console.error("[PLAY] URL do stream está vazia ou nula.");
+                alert("URL do stream de vídeo não disponível.");
+                return;
+            }
+
+            if (!moviePlayer) {
+                console.error("[PLAY] Elemento de vídeo (#moviePlayer) não encontrado.");
+                alert("Erro interno: Leitor de vídeo não encontrado na página.");
+                return;
+            }
+
+            if (!videoPlayerSection) {
+                console.error("[PLAY] Seção do leitor de vídeo (#videoPlayerSection) não encontrada.");
+                alert("Erro interno: Seção do leitor de vídeo não encontrada.");
+                return;
+            }
 
             // Esconder a seção de detalhes do filme
             if (movieDetailsSection) {
@@ -107,39 +136,77 @@
                 if (trailerSection) trailerSection.style.display = 'none';
             }
 
-            // Atualizar o título do filme a ser reproduzido
             document.getElementById('playingMovieTitle').textContent = movieTitle;
-
-            // Definir o URL do stream e carregar o vídeo
             moviePlayer.src = streamUrl;
-            moviePlayer.load(); // Carrega o novo URL
-            moviePlayer.play().catch(error => {
-                console.error("Erro ao tentar reproduzir o vídeo automaticamente:", error);
-                // Informar o utilizador que a reprodução automática pode estar bloqueada
-                alert("A reprodução automática pode estar bloqueada pelo navegador. Por favor, prima 'Play' no leitor de vídeo.");
+
+            // Adiciona ouvintes de evento para depuração do vídeo
+            moviePlayer.addEventListener('error', (event) => {
+                console.error("[PLAY ERROR] Erro no elemento de vídeo:", event);
+                console.error("[PLAY ERROR] Código do erro:", moviePlayer.error.code);
+                console.error("[PLAY ERROR] Mensagem de erro:", moviePlayer.error.message);
+                let errorMessage = "Ocorreu um erro ao tentar reproduzir o vídeo.";
+                switch (moviePlayer.error.code) {
+                    case 1: // MEDIA_ERR_ABORTED
+                        errorMessage += " A reprodução foi abortada.";
+                        break;
+                    case 2: // MEDIA_ERR_NETWORK
+                        errorMessage += " Erro de rede. O vídeo foi interrompido devido a um problema na rede ou o download foi cancelado.";
+                        break;
+                    case 3: // MEDIA_ERR_DECODE
+                        errorMessage += " Erro de descodificação. O vídeo está corrompido ou o navegador não suporta o formato.";
+                        break;
+                    case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+                        errorMessage += " O vídeo não pôde ser carregado, quer porque o servidor ou rede falhou, quer porque o formato não é suportado.";
+                        break;
+                    default:
+                        errorMessage += " Código de erro desconhecido.";
+                        break;
+                }
+                alert(errorMessage + " Por favor, verifique o console do navegador para mais detalhes.");
+            }, { once: true }); // Executa apenas uma vez
+
+            moviePlayer.addEventListener('loadstart', () => {
+                console.log("[PLAY] Carregamento do vídeo iniciado.");
+            }, { once: true });
+
+            moviePlayer.addEventListener('loadeddata', () => {
+                console.log("[PLAY] Dados do vídeo carregados.");
+            }, { once: true });
+
+            moviePlayer.addEventListener('canplay', () => {
+                console.log("[PLAY] O vídeo pode ser reproduzido.");
+            }, { once: true });
+
+            moviePlayer.load(); // Tenta carregar o novo URL
+            moviePlayer.play().then(() => {
+                console.log("[PLAY] Reprodução iniciada com sucesso.");
+            }).catch(error => {
+                console.error("[PLAY] Erro ao tentar reproduzir o vídeo automaticamente:", error);
+                if (error.name === "NotAllowedError") {
+                    alert("A reprodução automática pode estar bloqueada pelo navegador. Por favor, prima 'Play' no leitor de vídeo.");
+                } else {
+                    alert("Erro ao iniciar a reprodução. Verifique o console para mais detalhes.");
+                }
             });
 
-            // Mostrar o leitor de vídeo
             videoPlayerSection.style.display = 'block';
         }
 
         function hideVideoPlayer() {
+            console.log("[PLAY] A esconder o leitor de vídeo.");
             const moviePlayer = document.getElementById('moviePlayer');
             const videoPlayerSection = document.getElementById('videoPlayerSection');
             const movieDetailsSection = document.getElementById('movieDetails').closest('.container');
 
-            // Pausar e redefinir o vídeo
             moviePlayer.pause();
-            moviePlayer.src = ""; // Limpa a fonte do vídeo
+            moviePlayer.src = ""; // Limpa a fonte do vídeo para parar o carregamento
 
-            // Esconder o leitor de vídeo
             videoPlayerSection.style.display = 'none';
 
-            // Mostrar a seção de detalhes do filme novamente
             if (movieDetailsSection) {
                 movieDetailsSection.style.display = 'block';
                 const trailerSection = document.querySelector('.trailer-section');
-                if (trailerSection) trailerSection.style.display = 'block'; // Mostra o trailer de volta
+                if (trailerSection) trailerSection.style.display = 'block';
             }
         }
     </script>
