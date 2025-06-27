@@ -5,14 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Site de Filmes - Início</title>
     <link rel="stylesheet" href="/css/style.css">
-
-    <!-- CÓDIGO DE VERIFICAÇÃO DO ADSENSE: COLE AQUI O SNIPPET COMPLETO FORNECIDO PELO GOOGLE ADSENSE -->
-    <!-- Ele geralmente começa com <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?..."></script> -->
-    <!-- E também pode incluir um <meta name="google-adsense-account" content="ca-pub-..."> ou similar. -->
-    <!-- NÃO REMOVA AS TAGS <head> E </head> -->
-    <!-- EX: SEU CÓDIGO DE VERIFICAÇÃO ADSENSE AQUI -->
-    <!-- FIM DO CÓDIGO DE VERIFICAÇÃO DO ADSENSE -->
-
 </head>
 <body>
     <div class="header">
@@ -28,12 +20,11 @@
             <button onclick="performSearch()">Buscar</button>
         </div>
 
-        <!-- Novo wrapper para o layout principal (conteúdo + banners laterais) -->
+        <!-- Novo wrapper para o layout principal (conteúdo + banners laterais, sem os banners em si) -->
         <div class="main-layout-wrapper">
-            <div class="side-banner left-banner">
-                <!-- AQUI VOCÊ VAI COLAR O CÓDIGO DO SEU ANÚNCIO LATERAL ESQUERDO (ex: 160x600px) -->
-               <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5343928944521429"
-                 crossorigin="anonymous"></script>
+            <!-- Banners laterais removidos para esta versão -->
+            <div class="side-banner left-banner" style="display: none;"></div> 
+
             <!-- Área central que alternará entre busca e destaques -->
             <div class="central-content-area">
                 <div id="searchResults" class="search-results" style="display: none;">
@@ -45,13 +36,8 @@
                 </div>
 
                 <div id="mainContent">
-                    <!-- Banner de anúncio superior -->
-                    <div class="banner-ad top-banner">
-                        <!-- AQUI VOCÊ VAI COLAR O CÓDIGO DO SEU ANÚNCIO DE TOPO (ex: 728x90px) -->
-                        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5343928944521429"
-                        crossorigin="anonymous"></script>
-                        <!-- FIM DO SEU CÓDIGO DE ANÚNCIO DE TOPO -->
-                    </div>
+                    <!-- Banner de anúncio superior removido para esta versão -->
+                    <div class="banner-ad top-banner" style="display: none;"></div>
 
                     <h2 class="section-title">Filmes em Destaque</h2>
                     <div id="featuredMovies" class="movie-grid">
@@ -61,23 +47,12 @@
                 </div>
             </div>
 
-            <div class="side-banner right-banner">
-                <!-- AQUI VOCÊ VAI COLAR O CÓDIGO DO SEU ANÚNCIO LATERAL DIREITO (ex: 160x600px) -->
-                <!-- REMOVA A IMAGEM DE PLACEHOLDER ABAIXO E COLE SEU CÓDIGO DE ANÚNCIO -->
-               <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5343928944521429"
-               crossorigin="anonymous"></script>
-                <!-- FIM DO SEU CÓDIGO DE ANÚNCIO LATERAL DIREITO -->
-            </div>
+            <!-- Banners laterais removidos para esta versão -->
+            <div class="side-banner right-banner" style="display: none;"></div>
         </div>
 
-        <!-- Novo banner de anúncio na parte inferior do container principal -->
-        <div class="banner-ad bottom-banner">
-            <!-- AQUI VOCÊ VAI COLAR O CÓDIGO DO SEU ANÚNCIO DE FUNDO (ex: 970x90px) -->
-            <!-- REMOVA A IMAGEM DE PLACEHOLDER ABAIXO E COLE SEU CÓDIGO DE ANÚNCIO -->
-            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5343928944521429"
-            crossorigin="anonymous"></script>
-            <!-- FIM DO SEU CÓDIGO DE ANÚNCIO DE FUNDO -->
-        </div>
+        <!-- Banner de anúncio na parte inferior removido para esta versão -->
+        <div class="banner-ad bottom-banner" style="display: none;"></div>
     </div>
 
     <script>
