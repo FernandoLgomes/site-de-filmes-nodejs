@@ -432,3 +432,62 @@ body {
     margin-top: 10px;
     font-weight: bold;
 }
+
+
+/* Estilo para exibir o código de acesso */
+.access-code-display {
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #f0f0f0;
+}
+
+.access-code-display span {
+    transition: opacity 0.5s ease-in-out; /* Transição suave para o efeito de aparecer/desaparecer */
+    opacity: 1; /* Começa visível */
+}
+
+
+/* Otimização para dispositivos móveis menores */
+@media (max-width: 600px) { /* Novo breakpoint para telas menores que 600px */
+    .container {
+        padding: 10px;
+    }
+    .movie-grid {
+        /* Ajusta para 2 colunas em telas menores */
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+        gap: 10px; /* Reduz o espaçamento entre os filmes */
+    }
+    .movie-card img {
+        height: 195px; /* Ajusta a altura do pôster para caber melhor em 2 colunas */
+    }
+    .search-bar input {
+        width: 90%; /* Aumenta a largura da barra de busca */
+    }
+    .lock-screen-content {
+        padding: 20px; /* Reduz o padding da tela de bloqueio */
+    }
+}
+
+@media (max-width: 768px) { /* Mantém as regras existentes para telas até 768px */
+    .container {
+        padding: 10px;
+    }
+    .detail-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .poster-container, .info-container {
+        min-width: unset;
+        max-width: 90%;
+    }
+    .search-bar input {
+        width: 80%;
+    }
+    .banner-ad {
+        min-height: 60px;
+    }
+    .banner-ad.bottom-banner {
+        min-height: 60px;
+    }
+}

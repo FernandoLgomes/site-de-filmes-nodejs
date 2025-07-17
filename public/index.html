@@ -15,6 +15,8 @@
             <input type="password" id="accessCodeInput" placeholder="Código de Acesso">
             <button onclick="checkAccessCode()">Entrar</button>
             <p id="errorMessage" class="error-message"></p>
+            <!-- Novo elemento para exibir o código de acesso -->
+            <p class="access-code-display">Código: <span id="displayedAccessCode"></span></p>
         </div>
     </div>
 
@@ -73,20 +75,40 @@
     <script>
         // ATENÇÃO: Em uma aplicação real, NUNCA armazene senhas diretamente no código JavaScript do cliente.
         // Isso é apenas para fins de demonstração.
-        const ACCESS_CODE = "1234"; // Defina o seu código de acesso aqui
+        const ACCESS_CODE = "2025"; // Defina o seu código de acesso aqui
+        let codeDisplayInterval; // Variável para controlar o intervalo de exibição do código
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Não carrega filmes em destaque até que o acesso seja concedido
-            // fetchFeaturedMovies(); 
-            // featuredMoviesInterval = setInterval(fetchFeaturedMovies, 120000); 
-
             // Adiciona ouvinte de evento para a tecla Enter no campo de senha
             document.getElementById('accessCodeInput').addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
                     checkAccessCode();
                 }
             });
+
+            // Inicia o ciclo de exibição do código quando a página carrega
+            startCodeDisplayCycle();
         });
+
+        function startCodeDisplayCycle() {
+            const displayedAccessCode = document.getElementById('displayedAccessCode');
+            displayedAccessCode.textContent = ACCESS_CODE; // Define o código inicialmente
+
+            let isVisible = true;
+            codeDisplayInterval = setInterval(() => {
+                if (isVisible) {
+                    displayedAccessCode.style.opacity = '0'; // Esconde
+                } else {
+                    displayedAccessCode.style.opacity = '1'; // Mostra
+                }
+                isVisible = !isVisible; // Alterna o estado
+            }, 2000); // Alterna a cada 2 segundos
+        }
+
+        function stopCodeDisplayCycle() {
+            clearInterval(codeDisplayInterval); // Para o ciclo
+            document.getElementById('displayedAccessCode').style.opacity = '1'; // Garante que fique visível ao entrar
+        }
 
         function checkAccessCode() {
             const inputCode = document.getElementById('accessCodeInput').value;
@@ -98,6 +120,7 @@
                 errorMessage.textContent = ""; // Limpa qualquer mensagem de erro
                 lockScreen.style.display = 'none'; // Esconde a tela de bloqueio
                 siteContent.style.display = 'block'; // Mostra o conteúdo do site
+                stopCodeDisplayCycle(); // Para de exibir o código
 
                 // Agora que o acesso foi concedido, podemos carregar os filmes
                 fetchFeaturedMovies(); 
