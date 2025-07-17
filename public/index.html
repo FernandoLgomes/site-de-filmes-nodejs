@@ -7,82 +7,126 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="header">
-        <h1>Meu Catálogo de Filmes</h1>
-    </div>
-    <div class="navbar">
-        <a href="/">Início</a>
+    <!-- Tela de Bloqueio -->
+    <div id="lockScreen" class="lock-screen">
+        <div class="lock-screen-content">
+            <h2>Acesso Restrito</h2>
+            <p>Por favor, insira o código de acesso:</p>
+            <input type="password" id="accessCodeInput" placeholder="Código de Acesso">
+            <button onclick="checkAccessCode()">Entrar</button>
+            <p id="errorMessage" class="error-message"></p>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Buscar filmes...">
-            <button onclick="performSearch()">Buscar</button>
+    <!-- Conteúdo Principal do Site (Inicialmente Oculto) -->
+    <div id="siteContent" style="display: none;">
+        <div class="header">
+            <h1>Meu Catálogo de Filmes</h1>
+        </div>
+        <div class="navbar">
+            <a href="/">Início</a>
         </div>
 
-        <!-- Novo wrapper para o layout principal (conteúdo + banners laterais, sem os banners em si) -->
-        <div class="main-layout-wrapper">
-            <!-- Banners laterais removidos para esta versão -->
-            <div class="side-banner left-banner" style="display: none;"></div> 
+        <div class="container">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar filmes...">
+                <button onclick="performSearch()">Buscar</button>
+            </div>
 
-            <!-- Área central que alternará entre busca e destaques -->
-            <div class="central-content-area">
-                <div id="searchResults" class="search-results" style="display: none;">
-                    <h2>Resultados da Busca</h2>
-                    <div id="resultsList" class="movie-grid">
-                        <p>Nenhum resultado.</p>
+            <div class="main-layout-wrapper">
+                <div class="side-banner left-banner"> 
+                    <img src="https://placehold.co/160x600/555/FFF?text=Anuncio+Lateral+Esq" alt="Anúncio Lateral Esquerdo" style="width:100%; height:auto; display:block;">
+                </div> 
+
+                <div class="central-content-area">
+                    <div id="searchResults" class="search-results" style="display: none;">
+                        <h2>Resultados da Busca</h2>
+                        <div id="resultsList" class="movie-grid">
+                            <p>Nenhum resultado.</p>
+                        </div>
+                        <button onclick="showMainContent()">Voltar</button>
                     </div>
-                    <button onclick="showMainContent()">Voltar</button>
+
+                    <div id="mainContent">
+                        <div class="banner-ad top-banner">
+                            <img src="https://placehold.co/728x90/555/FFF?text=Seu+Anuncio+Aqui" alt="Anúncio Banner Topo" style="width:100%; height:auto; display:block;">
+                        </div>
+
+                        <h2 class="section-title">Filmes em Destaque</h2>
+                        <div id="featuredMovies" class="movie-grid">
+                            <p>Carregando filmes em destaque...</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="mainContent">
-                    <!-- Banner de anúncio superior removido para esta versão -->
-                    <div class="banner-ad top-banner" style="display: none;"></div>
-
-                    <h2 class="section-title">Filmes em Destaque</h2>
-                    <div id="featuredMovies" class="movie-grid">
-                        <p>Carregando filmes em destaque...</p>
-                    </div>
-                    <!-- Seções de Categoria Removidas -->
+                <div class="side-banner right-banner">
+                    <img src="https://placehold.co/160x600/555/FFF?text=Anuncio+Lateral+Dir" alt="Anúncio Lateral Direito" style="width:100%; height:auto; display:block;">
                 </div>
             </div>
 
-            <!-- Banners laterais removidos para esta versão -->
-            <div class="side-banner right-banner" style="display: none;"></div>
+            <div class="banner-ad bottom-banner">
+                <img src="https://placehold.co/970x90/555/FFF?text=Anuncio+Fundo+Pagina" alt="Anúncio Fundo da Página" style="width:100%; height:auto; display:block;">
+            </div>
         </div>
-
-        <!-- Banner de anúncio na parte inferior removido para esta versão -->
-        <div class="banner-ad bottom-banner" style="display: none;"></div>
     </div>
 
     <script>
-        let featuredMoviesInterval; // Variável global para armazenar o ID do intervalo
+        // ATENÇÃO: Em uma aplicação real, NUNCA armazene senhas diretamente no código JavaScript do cliente.
+        // Isso é apenas para fins de demonstração.
+        const ACCESS_CODE = "1234"; // Defina o seu código de acesso aqui
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Chamada inicial
-            fetchFeaturedMovies(); 
-            // Configura a atualização a cada 2 minutos (120000 ms)
-            featuredMoviesInterval = setInterval(fetchFeaturedMovies, 120000); 
+            // Não carrega filmes em destaque até que o acesso seja concedido
+            // fetchFeaturedMovies(); 
+            // featuredMoviesInterval = setInterval(fetchFeaturedMovies, 120000); 
+
+            // Adiciona ouvinte de evento para a tecla Enter no campo de senha
+            document.getElementById('accessCodeInput').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    checkAccessCode();
+                }
+            });
         });
 
-        // Alterna entre o conteúdo principal e os resultados de busca
-        function showMainContent() {
-            console.log('Exibindo conteúdo principal.');
-            // Oculta a área de resultados de busca
-            document.getElementById('searchResults').style.display = 'none';
-            // Exibe a área principal de conteúdo
-            document.getElementById('mainContent').style.display = 'block';
-            document.getElementById('searchInput').value = ''; // Limpa a busca
+        function checkAccessCode() {
+            const inputCode = document.getElementById('accessCodeInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const lockScreen = document.getElementById('lockScreen');
+            const siteContent = document.getElementById('siteContent');
+
+            if (inputCode === ACCESS_CODE) {
+                errorMessage.textContent = ""; // Limpa qualquer mensagem de erro
+                lockScreen.style.display = 'none'; // Esconde a tela de bloqueio
+                siteContent.style.display = 'block'; // Mostra o conteúdo do site
+
+                // Agora que o acesso foi concedido, podemos carregar os filmes
+                fetchFeaturedMovies(); 
+                // E configurar o intervalo para atualizações futuras
+                featuredMoviesInterval = setInterval(fetchFeaturedMovies, 120000); 
+
+            } else {
+                errorMessage.textContent = "Código de acesso incorreto. Tente novamente.";
+                document.getElementById('accessCodeInput').value = ''; // Limpa o campo
+            }
         }
 
-        // --- Funções para Destaques ---
+        // --- Funções existentes para o site ---
+        let featuredMoviesInterval; // Variável global para armazenar o ID do intervalo
+
+        function showMainContent() {
+            console.log('Exibindo conteúdo principal.');
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('searchInput').value = ''; 
+        }
+
         async function fetchFeaturedMovies() {
             console.log('Buscando filmes em destaque (randomizados)...');
             try {
-                const response = await fetch(`${window.location.origin}/api/filmes/random/100`); // Nova rota para 100 filmes aleatórios
+                const response = await fetch(`${window.location.origin}/api/filmes/random/100`);
                 const filmes = await response.json();
                 const featuredMoviesDiv = document.getElementById('featuredMovies');
-                featuredMoviesDiv.innerHTML = ''; // Limpa a mensagem de carregamento
+                featuredMoviesDiv.innerHTML = '';
 
                 if (filmes.length === 0) {
                     featuredMoviesDiv.innerHTML = '<p>Nenhum filme em destaque encontrado.</p>';
@@ -90,7 +134,7 @@
                     return;
                 }
                 
-                filmes.forEach(filme => { // Exibe todos os filmes recebidos (já limitados a 100 no servidor)
+                filmes.forEach(filme => {
                     const movieCard = `
                         <div class="movie-card">
                             <a href="/detalhe_filme.html?id=${filme.id}">
@@ -108,22 +152,19 @@
             }
         }
 
-        // --- Funções para Busca ---
         async function performSearch() {
             const query = document.getElementById('searchInput').value;
             const searchResultsDiv = document.getElementById('searchResults');
-            const resultsList = document.getElementById('resultsList'); // Agora é um DIV com movie-grid
-            resultsList.innerHTML = ''; // Limpa os resultados anteriores
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
 
             if (query.trim() === '') {
-                showMainContent(); // Se a busca estiver vazia, volta para a página principal
+                showMainContent();
                 return;
             }
 
-            // Oculta a área principal de conteúdo
-            document.getElementById('mainContent').style.display = 'none'; 
-            // Exibe a área de resultados de busca
-            searchResultsDiv.style.display = 'block'; 
+            document.getElementById('mainContent').style.display = 'none';
+            searchResultsDiv.style.display = 'block';
 
             try {
                 const response = await fetch(`${window.location.origin}/api/busca?q=${encodeURIComponent(query)}`);
@@ -131,7 +172,6 @@
 
                 if (filmes.length > 0) {
                     filmes.forEach(filme => {
-                        // Insere diretamente o movie-card no resultsList (que agora é um grid)
                         const movieCardHtml = `
                             <div class="movie-card">
                                 <a href="/detalhe_filme.html?id=${filme.id}">
