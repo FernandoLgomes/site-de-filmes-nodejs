@@ -1,17 +1,6 @@
-const express = require('express');
-const axios = require('axios');
-const app = express();
-const PORT = process.env.PORT || 4000;
-
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    next();
-});
-
+// Rota de proxy para streams de vídeo
 app.get('/stream-proxy', async (req, res) => {
-    const originalStreamUrl = req.query.url;
+    const originalStreamUrl = req.query.url; // Pega o URL do stream original do parâmetro 'url'
 
     if (!originalStreamUrl) {
         console.error('[PROXY] Erro: URL de stream não fornecido.');
@@ -20,24 +9,24 @@ app.get('/stream-proxy', async (req, res) => {
 
     console.log(`[PROXY] Recebido pedido para proxify: ${originalStreamUrl}`);
 
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Crie um objeto de cabeçalhos para encaminhar
+    const headersToForward = {
+        // Copia o User-Agent do cliente (seu site)
+        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36',
+        // Copia o Referer do cliente (seu site)
+        // Se o Referer não estiver presente, use o URL do stream como fallback
+        'Referer': req.headers['referer'] || originalStreamUrl,
+        // Você pode adicionar outros cabeçalhos se necessário, como 'Accept-Encoding'
+        'Accept-Encoding': req.headers['accept-encoding'] || 'br, gzip'
+    };
+    // --- FIM DA ALTERAÇÃO ---
+
     try {
-        // --- INÍCIO DA MODIFICAÇÃO ---
-        // Captura os cabeçalhos relevantes do request original do cliente
-        const clientUserAgent = req.headers['user-agent'];
-        const clientReferer = req.headers['referer'] || originalStreamUrl; // Usa o URL original como fallback para o Referer
-
-        // Define os cabeçalhos a serem enviados para o servidor de origem
-        const headersToForward = {
-            'User-Agent': clientUserAgent,
-            'Referer': clientReferer,
-            // Você pode adicionar outros cabeçalhos aqui se necessário, como 'Accept-Encoding'
-            'Accept-Encoding': req.headers['accept-encoding'] || 'identity', // Passa o accept-encoding do cliente
-        };
-        // --- FIM DA MODIFICAÇÃO ---
-
+        // Faz um pedido HTTP para o stream original
         const response = await axios.get(originalStreamUrl, {
-            responseType: 'stream',
-            headers: headersToForward, // Usa os cabeçalhos que capturamos
+            responseType: 'stream', // Importante para lidar com streams grandes
+            headers: headersToForward, // Passe os cabeçalhos copiados
         });
 
         // Configura os cabeçalhos da resposta do proxy
@@ -53,12 +42,13 @@ app.get('/stream-proxy', async (req, res) => {
         if (response.headers['accept-ranges']) {
             res.setHeader('Accept-Ranges', response.headers['accept-ranges']);
         }
-        // Copia outros cabeçalhos úteis, como 'content-disposition' se houver
-        if (response.headers['content-disposition']) {
-            res.setHeader('Content-Disposition', response.headers['content-disposition']);
+        // Copiar outros cabeçalhos que o servidor de origem possa exigir para continuar o stream (como 'content-encoding')
+        if (response.headers['content-encoding']) {
+            res.setHeader('Content-Encoding', response.headers['content-encoding']);
         }
 
 
+        // Transmite o stream do original para o cliente do proxy
         response.data.pipe(res);
         console.log(`[PROXY] A transmitir stream de ${originalStreamUrl}`);
 
@@ -68,7 +58,7 @@ app.get('/stream-proxy', async (req, res) => {
 
         response.data.on('error', (err) => {
             console.error(`[PROXY ERROR] Erro na transmissão do stream de ${originalStreamUrl}:`, err.message);
-            // Tenta enviar um status 500 se a conexão ainda estiver ativa
+            // Tente fechar a resposta do cliente se houver um erro na stream
             if (!res.headersSent) {
                 res.status(500).send('Erro ao transmitir o stream.');
             }
@@ -78,24 +68,16 @@ app.get('/stream-proxy', async (req, res) => {
         console.error(`[PROXY ERROR] Erro ao buscar o stream original ${originalStreamUrl}:`, error.message);
         if (error.response) {
             console.error(`[PROXY ERROR] Status da Resposta: ${error.response.status}`);
-            console.error(`[PROXY ERROR] Dados da Resposta:`, error.response.data); // Pode mostrar a página de erro do servidor
-            // Tenta enviar o status correto do erro original, se a resposta ainda não foi enviada
-            if (!res.headersSent) {
-                res.status(error.response.status).send(`Erro ao conectar ao stream original: ${error.response.status} ${error.response.statusText}`);
-            }
-        } else {
-            // Erro de rede ou outro erro inesperado
-            if (!res.headersSent) {
-                res.status(500).send('Erro inesperado ao conectar ao stream original.');
+            // Tente logar os dados da resposta se houver
+            try {
+                console.error(`[PROXY ERROR] Dados da Resposta:`, error.response.data);
+            } catch (e) {
+                console.error(`[PROXY ERROR] Não foi possível ler os dados da resposta.`);
             }
         }
+        // Se a resposta ainda não foi enviada, envie um erro apropriado
+        if (!res.headersSent) {
+            res.status(error.response ? error.response.status : 500).send('Erro ao conectar ao stream original.');
+        }
     }
-});
-
-app.get('/health', (req, res) => {
-    res.status(200).send('Proxy está ativo!');
-});
-
-app.listen(PORT, () => {
-    console.log(`Servidor Proxy a correr em http://localhost:${PORT}`);
 });
