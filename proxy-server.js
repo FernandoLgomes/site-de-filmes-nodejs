@@ -37,7 +37,7 @@ app.get('/stream-proxy', async (req, res) => {
         });
 
         // Configura os cabeçalhos da resposta do proxy
-        // Importante: Copie o Content-Type do stream original para o navegador saber como lidar com ele
+       
         if (response.headers['content-type']) {
             res.setHeader('Content-Type', response.headers['content-type']);
         } else {
