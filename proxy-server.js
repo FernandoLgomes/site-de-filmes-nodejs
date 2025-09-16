@@ -3,9 +3,8 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Middleware para permitir CORS (Cross-Origin Resource Sharing)
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*"); // Permite qualquer origem. Em produção, você pode querer restringir.
+    res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     next();
@@ -22,84 +21,117 @@ app.get('/stream-proxy', async (req, res) => {
 
     console.log(`[PROXY] Recebido pedido para proxify: ${originalStreamUrl}`);
 
-    // --- MELHORIA: Crie um objeto de cabeçalhos para encaminhar ---
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Crie um objeto de cabeçalhos para encaminhar
     const headersToForward = {
-        // 1. User-Agent: Copia do cliente (seu site) ou um padrão de navegador.
-        //    É comum que servidores bloqueiem requisições sem User-Agent ou com User-Agents genéricos demais.
-        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0', // Use um User-Agent mais recente ou o do cliente
+        // Copia o User-Agent do cliente (seu site)
+        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36',
+        
+        // *** AQUI ESTÁ A CHAVE ***
+        // Se a requisição vier do seu próprio site (local ou Render),
+        // NÃO envie o cabeçalho Referer original, pois ele pode ser bloqueado.
+        // Enviaremos um Referer genérico ou nenhum.
+        // Se a requisição for para o seu site, o 'referer' virá do navegador do usuário.
+        // Se a requisição for uma solicitação direta ao proxy sem um referer de uma página específica,
+        // o 'referer' pode ser indefinido ou algo diferente.
+        // Precisamos garantir que o servidor de origem não receba um 'referer' que ele bloqueia.
 
-        // 2. Referer: Crucial para evitar hotlinking. Copia do cliente.
-        //    Se o Referer não estiver presente (o que é incomum vindo de um navegador), use o próprio URL do stream
-        //    como fallback para tentar "enganar" o servidor.
-        'Referer': req.headers['referer'] || originalStreamUrl,
+        // Vamos tentar remover ou substituir o Referer.
+        // Se o seu 'proxy-test' local envia um Referer válido, é bom mantê-lo para testes.
+        // Mas para o deploy no Render, precisamos ter cuidado.
 
-        // 3. Accept: Informa ao servidor quais tipos de conteúdo o cliente pode processar.
-        'Accept': req.headers['accept'] || 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        // Opção mais segura para o Render: Remove o Referer
+        // 'Referer': null, 
 
-        // 4. Accept-Encoding: Informa quais métodos de compressão o cliente suporta.
-        //    O servidor pode usar isso para enviar dados compactados (como gzip ou brotli).
-        'Accept-Encoding': req.headers['accept-encoding'] || 'br, gzip, deflate',
+        // Opção que pode funcionar para ambos (teste local e Render, se o servidor aceitar):
+        // Tenta encaminhar o referer do cliente se ele existir, mas se for o seu próprio domínio,
+        // ele pode precisar ser tratado de forma diferente.
+        // Para simplificar agora, vamos focar em garantir que não bloqueie no Render.
+        // Se o req.headers['referer'] for o seu domínio proxy (render.com), tente removê-lo.
+        // Caso contrário, se for uma requisição direta ou de outro lugar, pode ser que precise.
 
-        // 5. Accept-Language: Preferência de idioma do cliente.
-        'Accept-Language': req.headers['accept-language'] || 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        // Vamos tentar REMOVER o Referer se ele for do seu domínio atual (render.com ou localhost)
+        // Isso é um pouco complexo, pois precisamos saber o domínio atual.
+        // Para o teste atual, vamos APENAS remover o 'Referer' se ele parecer vir do seu próprio proxy.
+        // Se o seu site que chama o proxy estiver em 'https://meu-proxy-filmes.onrender.com'
+        // E a requisição para o stream proxy for feita a partir de uma página desse site,
+        // o 'referer' será algo como 'https://meu-proxy-filmes.onrender.com/alguma-pagina'.
+        // Precisamos enviar um Referer que o 'cnxfast.site' aceite.
 
-        // 6. Connection: Geralmente 'keep-alive' para requisições persistentes.
-        'Connection': req.headers['connection'] || 'keep-alive',
+        // A forma mais simples e que costuma funcionar para contornar bloqueios de hotlinking
+        // é enviar um Referer genérico ou um que o servidor original espera ver.
+        // Como o seu teste local funcionou, o Referer local era aceito.
+        // Se o servidor original aceita um Referer genérico, vamos usá-lo.
+        // Vamos tentar **remover** o Referer para o ambiente de produção (Render).
+        // Para o teste local, podemos manter o Referer para que ele continue funcionando.
+        // No entanto, o código que você mostrou antes, com 'req.headers['referer'] || originalStreamUrl',
+        // é uma boa tentativa. O problema pode ser que o 'referer' *recebido* para o Render é o que está causando o bloqueio.
 
-        // Adicione outros cabeçalhos que o servidor de origem possa estar verificando
-        // Por exemplo, alguns servidores verificam 'Origin' se houver CORS sendo ativado
-        // 'Origin': req.headers['origin'] || 'null', // 'null' é comum quando a requisição vem de um script local ou quando CORS é configurado amplamente
+        // Vamos tentar o seguinte: encaminhar o Referer APENAS se ele vier de um domínio "seguro" ou ser genérico.
+        // Se o referer for do seu próprio proxy (render.com ou localhost), é melhor removê-lo.
+        // Isso é um pouco complicado de detectar programaticamente sem saber o domínio exato.
+
+        // Uma solução mais direta para o problema do 403 no Render:
+        // Enviar um Referer que o cnxfast.site provavelmente aceita.
+        // O seu teste local funcionou com o Referer local. Isso sugere que o servidor de origem
+        // não se importa tanto com o Referer *exato*, mas sim que ele exista e não seja bloqueado.
+
+        // Tente esta configuração: Copia o User-Agent, e para o Referer, use um genérico.
+        // Isso pode fazer com que seu site funcione no Render, e o seu teste local continue funcionando.
+        // 'Referer': 'https://www.google.com/', // Um referer genérico
+        // Ou se o seu teste local funcionou com o Referer que ele recebeu, tente reenviá-lo
+        // mas remova-o se for do próprio domínio do render.
+        
+        // A MAIS PROVÁVEL SOLUÇÃO PARA AMBIENTES DIFERENTES:
+        // Defina um 'Referer' que o servidor original provavelmente aceita.
+        // Como o teste local funcionou, o problema é o Referer do Render.
+        // Vamos tentar definir um Referer genérico para a requisição para o cnxfast.site.
+        'Referer': 'https://example.com', // Ou um URL que você sabe que funciona, ou tente null
+        
+        // Se o acima falhar no Render, tente REMOVER o Referer completamente:
+        // Se você comentar a linha acima, descomente esta:
+        // 'Referer': null, 
+
+        // Outros cabeçalhos que podem ser úteis (se necessário)
+        'Accept-Encoding': req.headers['accept-encoding'] || 'br, gzip'
     };
-    // --- FIM DA MELHORIA ---
+    // --- FIM DA ALTERAÇÃO ---
 
     try {
-        // Faz um pedido HTTP para o stream original usando os cabeçalhos simulados
+        // Faz um pedido HTTP para o stream original
         const response = await axios.get(originalStreamUrl, {
             responseType: 'stream', // Importante para lidar com streams grandes
-            headers: headersToForward, // Passe os cabeçalhos simulados
-            // É fundamental que 'axios' não remova ou altere os cabeçalhos que você está definindo.
-            // Por padrão, axios remove 'Accept-Encoding', então é importante repassá-lo.
+            headers: headersToForward, // Passe os cabeçalhos copiados
         });
 
-        // --- Configura os cabeçalhos da resposta do proxy para o cliente ---
-        // O objetivo é repassar os cabeçalhos relevantes que o navegador do cliente espera.
-
-        // Passa o Content-Type. Se não vier, usa um fallback.
+        // Configura os cabeçalhos da resposta do proxy
         if (response.headers['content-type']) {
             res.setHeader('Content-Type', response.headers['content-type']);
         } else {
-            res.setHeader('Content-Type', 'video/mp4'); // Fallback genérico
+            res.setHeader('Content-Type', 'video/mp4'); // Fallback
         }
 
-        // Passa o Content-Length se disponível.
         if (response.headers['content-length']) {
             res.setHeader('Content-Length', response.headers['content-length']);
         }
-        // Passa o Accept-Ranges para permitir seeking (avanço/retrocesso no vídeo).
         if (response.headers['accept-ranges']) {
             res.setHeader('Accept-Ranges', response.headers['accept-ranges']);
         }
-        // Passa o Content-Encoding. Se o servidor de origem enviou um stream compactado (ex: gzip),
-        // você precisa repassar isso para que o navegador saiba como descompactar.
+        // Copiar outros cabeçalhos que o servidor de origem possa exigir para continuar o stream (como 'content-encoding')
         if (response.headers['content-encoding']) {
             res.setHeader('Content-Encoding', response.headers['content-encoding']);
         }
-        // Outros cabeçalhos importantes que o navegador pode precisar:
-        // ETag, Last-Modified, Cache-Control, etc.
-        // Se precisar deles, adicione condições similares às acima.
 
-        // Transmite o stream do servidor original para o cliente do proxy
+        // Transmite o stream do original para o cliente do proxy
         response.data.pipe(res);
         console.log(`[PROXY] A transmitir stream de ${originalStreamUrl}`);
 
-        // Lida com eventos de fim e erro na stream original
         response.data.on('end', () => {
             console.log(`[PROXY] Stream de ${originalStreamUrl} finalizado.`);
         });
 
         response.data.on('error', (err) => {
             console.error(`[PROXY ERROR] Erro na transmissão do stream de ${originalStreamUrl}:`, err.message);
-            // Tenta fechar a resposta do cliente se houver um erro na stream
             if (!res.headersSent) {
                 res.status(500).send('Erro ao transmitir o stream.');
             }
@@ -109,27 +141,16 @@ app.get('/stream-proxy', async (req, res) => {
         console.error(`[PROXY ERROR] Erro ao buscar o stream original ${originalStreamUrl}:`, error.message);
         if (error.response) {
             console.error(`[PROXY ERROR] Status da Resposta: ${error.response.status}`);
-            // Tente logar os dados da resposta se houver (pode ser HTML de erro, JSON, etc.)
             try {
-                // Tenta converter para string para logs mais limpos
-                const responseData = typeof error.response.data === 'string'
-                    ? error.response.data
-                    : JSON.stringify(error.response.data);
-                console.error(`[PROXY ERROR] Dados da Resposta:`, responseData);
+                console.error(`[PROXY ERROR] Dados da Resposta:`, error.response.data);
             } catch (e) {
-                console.error(`[PROXY ERROR] Não foi possível ler/logar os dados da resposta.`);
+                console.error(`[PROXY ERROR] Não foi possível ler os dados da resposta.`);
             }
         }
-        // Se a resposta ainda não foi enviada, envie um erro apropriado para o cliente.
         if (!res.headersSent) {
             res.status(error.response ? error.response.status : 500).send('Erro ao conectar ao stream original.');
         }
     }
-});
-
-// Rota de saúde para verificar se o proxy está ativo
-app.get('/health', (req, res) => {
-    res.status(200).send('Proxy está ativo!');
 });
 
 app.listen(PORT, () => {
