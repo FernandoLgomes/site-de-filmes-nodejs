@@ -32,7 +32,7 @@ app.get('/stream-proxy', async (req, res) => {
             responseType: 'stream', // Importante para lidar com streams grandes
             headers: {
                 // Opcional: copie cabeçalhos importantes do pedido original, se souber quais são necessários
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
             }
         });
 
